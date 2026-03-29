@@ -1,0 +1,2432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>ATL UTD // LINEUP BUILDER</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    /* ─── actual ATL UTD palette from crest ─── */
+    :root {
+      color-scheme: dark;
+      --red:       #810003;
+      --red-dark:  #560002;
+      --red-glow:  rgba(129,0,3,0.22);
+      --gold:      #A3956A;   /* muted antique gold from crest */
+      --gold-dim:  rgba(163,149,106,0.14);
+      --gold-glow: rgba(163,149,106,0.28);
+      --gold-bright: #C4AF7E;
+      --crest-dark: #1A1815;  /* crest outer ring charcoal */
+      --crest-red:  #6B1422;  /* crest inner circle crimson */
+      --black:     #0C0B09;   /* warm-tinted black */
+      --s1:        #121110;
+      --s2:        #1A1916;
+      --s3:        #222019;
+      --s4:        #2C2924;
+      --line:      rgba(255,255,255,0.06);
+      --line2:     rgba(255,255,255,0.11);
+      --muted:     rgba(255,255,255,0.4);
+      --dim:       rgba(255,255,255,0.18);
+      --white:     #FFFFFF;
+      --fg:  'Barlow Condensed', sans-serif;
+      --fb:  'Barlow', sans-serif;
+      --fo:  'Oswald', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; background: var(--black); color: var(--white); font-family: var(--fb); overflow: hidden; }
+
+    /* ─── LAYOUT ─────────────────────────────── */
+    .app { display: grid; grid-template-rows: auto auto 1fr; height: 100vh; height: 100dvh; overflow: hidden; }
+
+    /* ─── HEADER ─────────────────────────────── */
+    header {
+      background: var(--s1);
+      border-bottom: 1px solid var(--line2);
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      padding-left: max(18px, env(safe-area-inset-left));
+      padding-right: max(18px, env(safe-area-inset-right));
+      position: relative;
+      z-index: 50;
+      flex-shrink: 0;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(163,149,106,0.05) 0%, transparent 35%);
+      pointer-events: none;
+    }
+
+    .brand { display: flex; align-items: center; gap: 11px; }
+
+    /* Header crest SVG */
+    .header-crest { width: 40px; height: 40px; flex-shrink: 0; }
+
+    .brand-text { display: flex; flex-direction: column; line-height: 1; }
+    .brand-name {
+      font-family: var(--fo);
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold-bright);
+    }
+    .brand-sub {
+      font-family: var(--fg);
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    .header-center { display: flex; align-items: center; gap: 10px; }
+    .lineup-name-wrap { display: flex; align-items: center; gap: 7px; }
+    .lineup-name-label {
+      font-family: var(--fg);
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .lineup-name-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--line2);
+      color: var(--white);
+      font-family: var(--fo);
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 0.1em;
+      width: 155px;
+      padding: 3px 4px;
+      outline: none;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .lineup-name-input:focus { border-bottom-color: var(--gold); }
+    .lineup-name-input::placeholder { color: var(--dim); }
+
+    .header-actions { display: flex; gap: 8px; }
+    .btn {
+      font-family: var(--fg);
+      font-weight: 700;
+      font-size: 0.73rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0 16px;
+      min-height: 44px;
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-ghost { background: transparent; border: 1px solid var(--line2); color: var(--muted); }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-ghost:active { background: rgba(163,149,106,0.08); border-color: var(--gold); color: var(--gold); transform: scale(0.97); }
+    .btn-red { background: var(--red); color: white; }
+    .btn-red:hover { background: var(--red-dark); transform: translateY(-1px); box-shadow: 0 4px 14px var(--red-glow); }
+    .btn-red:active { background: var(--red-dark); transform: scale(0.97); box-shadow: none; }
+
+    /* ─── FORMATION BAR ───────────────────────── */
+    .fbar {
+      background: var(--s1);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      padding-left: max(18px, env(safe-area-inset-left));
+      padding-right: max(18px, env(safe-area-inset-right));
+      gap: 12px;
+      flex-shrink: 0;
+      height: 52px;
+    }
+    .fbar-label {
+      font-family: var(--fg);
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      color: var(--muted);
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .fbar-divider { width: 1px; height: 18px; background: var(--line2); flex-shrink: 0; }
+    .fbar-pills { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; }
+    .fbar-pills::-webkit-scrollbar { display: none; }
+    .fpill {
+      font-family: var(--fg);
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      padding: 0 13px;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--line2);
+      border-radius: 2px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: background 0.18s, color 0.18s, border-color 0.18s;
+      white-space: nowrap;
+    }
+    .fpill:hover { border-color: rgba(163,149,106,0.45); color: var(--gold); }
+    .fpill:active:not(.active) { background: rgba(163,149,106,0.1); border-color: rgba(163,149,106,0.45); color: var(--gold); transform: scale(0.96); }
+    .fpill.active { background: var(--red); border-color: var(--red); color: white; }
+    .fbar-count {
+      margin-left: auto;
+      font-family: var(--fg);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .fbar-count span { color: var(--gold); }
+
+    /* ─── MAIN ────────────────────────────────── */
+    .main { display: grid; grid-template-columns: 1fr 288px; overflow: hidden; }
+
+    /* ─── PITCH AREA ──────────────────────────── */
+    .pitch-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: var(--black);
+      position: relative;
+      overflow: hidden;
+    }
+    /* Subtle warm glow in the center */
+    .pitch-area::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 45% at 50% 50%, rgba(163,149,106,0.03) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    /* Corner accent TL */
+    .pitch-area::after {
+      content: '';
+      position: absolute;
+      top: 14px; left: 14px;
+      width: 36px; height: 36px;
+      border-top: 2px solid var(--red);
+      border-left: 2px solid var(--red);
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    .pitch-wrap {
+      position: relative;
+      height: 100%;
+      max-height: 640px;
+      aspect-ratio: 0.649;
+      flex-shrink: 0;
+    }
+    /* Corner accent BR */
+    .pitch-wrap::after {
+      content: '';
+      position: absolute;
+      bottom: -3px; right: -3px;
+      width: 36px; height: 36px;
+      border-bottom: 2px solid var(--gold);
+      border-right: 2px solid var(--gold);
+      opacity: 0.35;
+    }
+
+    .pitch {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 2px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 24px 64px rgba(0,0,0,0.85);
+    }
+
+    .pitch-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+    /* Pitch crest watermark */
+    .pitch-crest-wrap {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .pitch-crest-svg {
+      width: 55%;
+      height: auto;
+      max-width: 260px;
+      object-fit: contain;
+      opacity: 0.055;
+    }
+
+    /* Custom formation pitch */
+    .pitch.custom-mode {
+      transition: box-shadow 0.2s;
+    }
+    .pitch.custom-mode.drag-over {
+      box-shadow: inset 0 0 0 2px var(--gold);
+    }
+
+    .pitch-instruction {
+      position: absolute;
+      bottom: 7px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--fg);
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.22);
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* ─── POSITION SLOTS ──────────────────────── */
+    .pslot {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 1.5px dashed rgba(255,255,255,0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: border-color 0.2s, background 0.2s, transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
+      z-index: 10;
+      background: rgba(0,0,0,0.22);
+    }
+    .pslot:hover {
+      border-color: var(--gold);
+      background: var(--gold-dim);
+      box-shadow: 0 0 12px var(--gold-glow);
+      transform: translate(-50%, -50%) scale(1.12);
+    }
+    .pslot.drop-over {
+      border-color: var(--gold);
+      border-style: solid;
+      background: rgba(163,149,106,0.22);
+      transform: translate(-50%, -50%) scale(1.28);
+      animation: slotDropGlow 0.7s ease-in-out infinite alternate;
+    }
+    @keyframes slotDropGlow {
+      from { box-shadow: 0 0 0 3px var(--gold-glow), 0 0 18px var(--gold-glow); }
+      to   { box-shadow: 0 0 0 7px rgba(163,149,106,0.45), 0 0 34px rgba(163,149,106,0.35); }
+    }
+    .pslot.selected-target {
+      border-color: var(--gold);
+      border-style: solid;
+      animation: pulse-slot 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse-slot {
+      0%, 100% { box-shadow: 0 0 0 0 var(--gold-glow); }
+      50%       { box-shadow: 0 0 0 6px transparent; }
+    }
+    .pslot-label {
+      font-family: var(--fg);
+      font-weight: 700;
+      font-size: 0.58rem;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.45);
+      pointer-events: none;
+    }
+
+    /* ─── PLAYER TOKENS ───────────────────────── */
+    .ptoken {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      touch-action: manipulation;
+      z-index: 16; /* above draw layer active state (z-index:15) so tokens stay interactive */
+      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      animation: token-appear 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes token-appear {
+      from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)); }
+      to   { opacity: 1; transform: translate(-50%, -50%); }
+    }
+    .ptoken:hover { transform: translate(-50%, -50%) scale(1.1); }
+    .ptoken:hover .token-circle { box-shadow: 0 4px 20px var(--red-glow), 0 0 0 2px var(--gold); }
+    .ptoken:active { transform: translate(-50%, -50%) scale(0.93); }
+    .pslot:active { transform: translate(-50%, -50%) scale(0.92); background: var(--gold-dim); border-color: var(--gold); }
+
+    .token-circle {
+      width: 41px;
+      height: 41px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid var(--gold);
+      box-shadow: 0 3px 14px rgba(129,0,3,0.5);
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .token-circle img {
+      position: absolute;
+      width: 400%;
+      height: auto;
+      left: -150%;
+      top: -20%;
+      display: block;
+    }
+    .token-pos-badge {
+      position: absolute;
+      bottom: -3px; right: -3px;
+      background: var(--gold);
+      color: var(--crest-dark);
+      font-family: var(--fg);
+      font-weight: 900;
+      font-size: 0.38rem;
+      letter-spacing: 0.04em;
+      padding: 1px 3px;
+      border-radius: 2px;
+    }
+    .token-name {
+      font-family: var(--fg);
+      font-weight: 700;
+      font-size: 0.55rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: white;
+      background: rgba(0,0,0,0.72);
+      padding: 2px 5px;
+      border-radius: 2px;
+      white-space: nowrap;
+      max-width: 68px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    /* ─── SIDEBAR ─────────────────────────────── */
+    .sidebar {
+      background: var(--s1);
+      border-left: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar-top {
+      padding: 13px 15px 10px;
+      border-bottom: 1px solid var(--line);
+      flex-shrink: 0;
+    }
+    .sidebar-heading {
+      font-family: var(--fo);
+      font-weight: 700;
+      font-size: 0.88rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .sidebar-sub { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+
+    .squad-list {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 10px 11px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--s4) transparent;
+    }
+    .pos-group { margin-bottom: 13px; }
+    .pos-group-label {
+      font-family: var(--fg);
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+      padding: 0 3px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pos-group-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, rgba(163,149,106,0.35), transparent);
+    }
+
+    .pcard {
+      background: var(--s2);
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      padding: 10px 10px;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: grab;
+      margin-bottom: 5px;
+      touch-action: manipulation;
+      transition: background 0.18s, border-color 0.18s, transform 0.18s, opacity 0.18s, box-shadow 0.18s;
+      user-select: none;
+      position: relative;
+    }
+    .pcard:active { cursor: grabbing; }
+    .pcard:active:not(.on-pitch):not(.selected):not(.hold-pending):not(.drag-ready) { background: var(--s4); transform: scale(0.98); }
+    .pcard:hover:not(.on-pitch) {
+      border-color: rgba(129,0,3,0.45);
+      background: var(--s3);
+      transform: translateX(3px);
+    }
+    .pcard.selected {
+      border-color: var(--gold);
+      background: var(--gold-dim);
+      box-shadow: inset 3px 0 0 var(--gold);
+    }
+    .pcard.on-pitch { opacity: 0.3; cursor: default; }
+    .pcard.on-pitch::after {
+      content: '✓ ON PITCH';
+      position: absolute;
+      right: 8px;
+      font-family: var(--fg);
+      font-size: 0.48rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    /* ─── HOLD-AND-DRAG STATES ───────────────────── */
+    /* Ring that grows in over 200ms to signal "keep holding" */
+    .pcard.hold-pending::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 4px;
+      border: 2px solid var(--gold);
+      pointer-events: none;
+      animation: holdRing 0.22s ease-out forwards;
+    }
+    @keyframes holdRing {
+      from { opacity: 0; transform: scale(0.88); }
+      to   { opacity: 0.8; transform: scale(1.0); }
+    }
+    /* Scale-up + gold glow when player is "picked up" and ready to drag */
+    .pcard.drag-ready {
+      transform: scale(1.05);
+      border-color: var(--gold);
+      background: var(--gold-dim);
+      box-shadow: 0 0 0 2px rgba(163,149,106,0.3), 0 8px 32px rgba(0,0,0,0.72);
+      z-index: 50;
+    }
+
+    .card-num {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1.5px solid var(--gold);
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .card-num img {
+      position: absolute;
+      width: 400%;
+      height: auto;
+      left: -150%;
+      top: -20%;
+      display: block;
+    }
+    .card-info { flex: 1; min-width: 0; }
+    .card-name {
+      font-family: var(--fg);
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-detail { font-size: 0.63rem; color: var(--muted); font-family: var(--fg); letter-spacing: 0.1em; }
+    .card-drag { color: var(--dim); font-size: 0.78rem; flex-shrink: 0; }
+
+    /* ─── SELECTED BANNER ─────────────────────── */
+    .selected-banner {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      background: linear-gradient(90deg, var(--red) 0%, var(--red-dark) 100%);
+      font-family: var(--fg);
+      font-weight: 700;
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 5px 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 20;
+      pointer-events: none;
+    }
+    .selected-banner.visible { opacity: 1; pointer-events: auto; }
+    .banner-dismiss { cursor: pointer; opacity: 0.7; font-size: 0.62rem; background: none; border: none; color: inherit; font-family: inherit; font-weight: inherit; letter-spacing: inherit; text-transform: inherit; padding: 0; }
+
+    /* ─── TOAST ───────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: max(22px, env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--s3);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-family: var(--fg);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 9px 22px;
+      border-radius: 2px;
+      z-index: 999;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ─── CUSTOM PLAYER COMPONENTS ───────────── */
+    .custom-name-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px dashed transparent;
+      color: var(--white);
+      font-family: var(--fg);
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      width: 100%;
+      padding: 0 0 1px;
+      outline: none;
+      cursor: text;
+      text-transform: uppercase;
+      transition: border-color 0.15s;
+    }
+    .custom-name-input:hover,
+    .custom-name-input:focus { border-bottom-color: var(--gold); }
+    .custom-name-input::placeholder { color: var(--dim); }
+    .custom-remove-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.65rem;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 2px;
+      transition: color 0.15s, background 0.15s;
+      touch-action: manipulation;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .custom-remove-btn:hover { color: var(--white); background: rgba(255,255,255,0.08); }
+    .custom-remove-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .add-custom-btn {
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      border: 1px dashed rgba(163,149,106,0.3);
+      border-radius: 2px;
+      color: var(--gold);
+      font-family: var(--fg);
+      font-weight: 600;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      touch-action: manipulation;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.18s, border-color 0.18s;
+      margin-top: 8px;
+      min-height: 44px;
+    }
+    .add-custom-btn:hover { background: var(--gold-dim); border-color: var(--gold); }
+    .add-custom-btn:active { transform: scale(0.98); }
+    .add-custom-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+    /* ─── DRAW TOOLBAR ───────────────────────── */
+    .draw-toolbar {
+      display: flex; align-items: center; gap: 3px; flex-wrap: wrap;
+      padding: 5px 8px; background: var(--s2);
+      border: 1px solid var(--line); border-radius: 2px;
+      margin-top: 8px; flex-shrink: 0; max-width: 100%;
+    }
+    .dtool-toggle {
+      display: flex; align-items: center; gap: 5px;
+      padding: 3px 10px; min-height: 30px;
+      background: transparent; border: 1px solid var(--line2); border-radius: 2px;
+      color: var(--muted); font-family: var(--fg); font-weight: 700;
+      font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase;
+      cursor: pointer; touch-action: manipulation; white-space: nowrap; flex-shrink: 0;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .dtool-toggle:hover { color: var(--gold); border-color: rgba(163,149,106,0.45); }
+    .dtool-toggle.active { color: var(--gold); border-color: var(--gold); background: var(--gold-dim); }
+    .dtool-toggle:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .dtool-panel { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+    .dtool-panel[hidden] { display: none !important; }
+    .dtool-sep { width: 1px; height: 18px; background: var(--line2); margin: 0 2px; flex-shrink: 0; }
+    .dtool {
+      width: 28px; height: 28px; background: transparent;
+      border: 1px solid transparent; border-radius: 2px;
+      color: var(--muted); font-size: 0.85rem;
+      cursor: pointer; touch-action: manipulation;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: color 0.15s, background 0.15s, border-color 0.15s;
+    }
+    .dtool:hover { color: var(--gold); background: var(--gold-dim); }
+    .dtool.active { color: var(--gold); border-color: rgba(163,149,106,0.4); background: var(--gold-dim); }
+    .dtool:active { transform: scale(0.91); }
+    .dtool:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+    .dcolor {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 1.5px solid transparent; cursor: pointer; touch-action: manipulation;
+      flex-shrink: 0; transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+    }
+    .dcolor:hover { transform: scale(1.25); }
+    .dcolor.active { border-color: var(--white); box-shadow: 0 0 0 1px rgba(0,0,0,0.5); transform: scale(1.15); }
+    .dcolor:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .dwidth {
+      height: 28px; padding: 0 5px; background: transparent;
+      border: 1px solid transparent; border-radius: 2px; color: var(--muted);
+      cursor: pointer; touch-action: manipulation;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: color 0.15s, background 0.15s, border-color 0.15s;
+    }
+    .dwidth:hover { color: var(--gold); }
+    .dwidth.active { color: var(--gold); background: var(--gold-dim); border-color: rgba(163,149,106,0.3); }
+    .dwidth:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+    /* SVG drawing layer — sits over pitch content */
+    .drawing-layer {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      z-index: 8; pointer-events: none; overflow: visible;
+    }
+    .drawing-layer.draw-active {
+      pointer-events: all; cursor: crosshair; z-index: 15;
+      touch-action: none;
+    }
+
+    /* ─── PITCH BALL ─────────────────────────── */
+    .pitch-ball {
+      position: absolute;
+      width: 32px; height: 32px;   /* transparent touch target */
+      display: flex; align-items: center; justify-content: center;
+      transform: translate(-50%, -50%);
+      cursor: grab;
+      z-index: 16; /* above draw layer active state (z-index:15) so ball stays draggable */
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      border-radius: 50%;
+    }
+    .pitch-ball svg {
+      width: 14px; height: 14px;   /* ~33% of 41px token circle */
+      pointer-events: none;
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.8));
+      transition: transform 0.12s;
+    }
+    .pitch-ball:hover svg { transform: scale(1.25); }
+    .pitch-ball.ball-dragging { cursor: grabbing; }
+    .pitch-ball.ball-dragging svg { transform: scale(1.15); }
+
+    /* ─── DRAG GHOST (touch drag from squad to pitch) ── */
+    .drag-ghost {
+      position: fixed;
+      top: 0; left: 0;           /* JS positions via transform — no layout reflow */
+      pointer-events: none;
+      z-index: 9999;
+      will-change: transform;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--s4);
+      border: 1px solid var(--gold);
+      border-radius: 3px;
+      padding: 5px 10px 5px 6px;
+      box-shadow: 0 6px 28px rgba(0,0,0,0.8), 0 0 0 1px rgba(196,175,126,0.25);
+      white-space: nowrap;
+      animation: ghostPop 0.14s cubic-bezier(0.2, 0, 0, 1.6) forwards;
+    }
+    @keyframes ghostPop {
+      from { opacity: 0; scale: 0.82; }
+      to   { opacity: 1; scale: 1; }
+    }
+    .drag-ghost-img {
+      width: 28px; height: 28px;
+      border-radius: 50%; overflow: hidden;
+      flex-shrink: 0; background: var(--s3);
+    }
+    .drag-ghost-img img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+    .drag-ghost-name {
+      font-family: var(--fg); font-size: 0.82rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--white);
+    }
+    /* Pitch glow when a drag is hovering over it in custom mode */
+    .pitch.drag-over-pitch {
+      box-shadow: inset 0 0 0 2px var(--gold), 0 0 0 1px rgba(255,255,255,0.07), 0 24px 64px rgba(0,0,0,0.85) !important;
+    }
+
+    /* ─── FOCUS VISIBLE ──────────────────────── */
+    .btn:focus-visible,
+    .fpill:focus-visible,
+    .banner-dismiss:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 2px;
+    }
+    .pcard:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 1px;
+      border-color: var(--gold);
+    }
+    .pslot:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 2px;
+      border-color: var(--gold);
+    }
+    .ptoken:focus-visible .token-circle {
+      outline: 2px solid var(--gold);
+      outline-offset: 2px;
+    }
+    .lineup-name-input:focus-visible {
+      border-bottom-color: var(--gold);
+      outline: none;
+    }
+
+    /* ─── REDUCED MOTION ─────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* ─── RESPONSIVE ──────────────────────────── */
+
+    /* Tablet (768px and below) */
+    @media (max-width: 768px) {
+      .header-center { display: none; }
+      .brand-name { font-size: 0.9rem; }
+    }
+
+    /* Mobile (600px and below) */
+    @media (max-width: 600px) {
+      /* ── Override desktop height:100%/overflow:hidden; let body scroll ── */
+      html { height: auto; overflow: visible; }
+      body { height: auto; overflow-x: hidden; overflow-y: auto; width: 100%; }
+
+      /* ── App: flex column instead of grid to avoid implicit track blowout ── */
+      .app {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 100vw;
+        overflow: visible;
+        height: auto;
+        min-height: 100dvh;
+      }
+
+      /* ── Header: fixed so RESET/SAVE always accessible while scrolling ── */
+      header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        height: 50px;
+        padding: 0 14px;
+        padding-left: max(14px, env(safe-area-inset-left));
+        padding-right: max(14px, env(safe-area-inset-right));
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .header-crest { width: 32px; height: 32px; }
+      .brand-name { font-size: 0.8rem; letter-spacing: 0.12em; }
+      .btn { min-height: 36px; padding: 0 11px; font-size: 0.66rem; }
+
+      /* ── Formation bar: fixed below header ── */
+      .fbar {
+        position: fixed;
+        top: 50px;
+        left: 0;
+        right: 0;
+        z-index: 99;
+        height: 44px;
+        padding: 0 12px;
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+        gap: 8px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .fbar-label { font-size: 0.52rem; }
+      .fbar-pills { min-width: 0; }
+      .fpill { font-size: 0.72rem; padding: 0 9px; min-height: 32px; }
+      .fbar-count { display: none; }
+
+      /* ── Main: flex column, constrained to viewport width ── */
+      .main {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        flex: 1;
+        overflow: visible;
+      }
+
+      /* ── Pitch area: offset for fixed header (50px) + fbar (44px) ── */
+      .pitch-area {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px 6px;
+        padding-top: max(10px, calc(94px + 10px));
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+        justify-content: flex-start;
+      }
+      .pitch-wrap {
+        width: 100%;
+        max-width: 340px;
+        height: auto;
+        max-height: none;
+        margin: 0 auto;
+      }
+
+      /* ── Draw toolbar ── */
+      .draw-toolbar {
+        width: 100%;
+        max-width: 340px;
+        box-sizing: border-box;
+        margin: 6px auto 0;
+      }
+      .dtool-toggle { min-height: 28px; padding: 0 8px; font-size: 0.64rem; }
+      .dtool { width: 26px; height: 26px; font-size: 0.8rem; }
+      .dcolor { width: 14px; height: 14px; }
+      .dwidth { height: 26px; }
+
+      /* ── Sidebar: full height, page scroll handles roster ── */
+      .sidebar {
+        width: 100%;
+        box-sizing: border-box;
+        border-left: none;
+        border-top: 1px solid var(--line);
+        height: auto;
+        max-height: none;
+        min-height: 0;
+        overflow: visible;
+        flex-shrink: 0;
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+      }
+      .sidebar-top { padding: 9px 14px 8px; }
+      .sidebar-heading { font-size: 0.76rem; }
+      .sidebar-sub { font-size: 0.6rem; }
+      /* Squad list: no internal scroll — page scrolls the full roster */
+      .squad-list { padding: 7px 10px; overflow-y: visible; height: auto; flex: none; }
+
+      /* ── Player cards: larger touch targets; touch-action:pan-y so the page
+            can scroll freely until a 200ms hold confirms drag intent ── */
+      .pcard { padding: 9px 12px; min-height: 52px; margin-bottom: 5px; }
+      .pcard:not(.on-pitch) { touch-action: pan-y; }
+      .card-name { font-size: 0.82rem; }
+      .card-detail { font-size: 0.63rem; }
+      .card-num { width: 38px; height: 38px; }
+
+      /* ── Tokens ── */
+      .token-circle { width: 44px; height: 44px; }
+
+      /* ── Toast ── */
+      .toast {
+        bottom: max(16px, calc(env(safe-area-inset-bottom) + 8px));
+        font-size: 0.68rem;
+        padding: 8px 16px;
+      }
+
+      /* ── Pitch instruction ── */
+      .pitch-instruction { font-size: 0.52rem; letter-spacing: 0.1em; }
+
+      /* ── Selected banner ── */
+      .selected-banner { font-size: 0.62rem; padding: 0 14px; letter-spacing: 0.12em; }
+    }
+
+    /* Small phones (375px and below) */
+    @media (max-width: 375px) {
+      .pitch-wrap { max-width: 100%; }
+      .draw-toolbar { max-width: 100%; }
+      .brand-name { font-size: 0.72rem; letter-spacing: 0.08em; }
+      .btn { font-size: 0.6rem; padding: 0 9px; min-height: 34px; }
+      .fpill { font-size: 0.68rem; padding: 0 8px; }
+      .sidebar { max-height: 40vh; min-height: 175px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <img class="header-crest" src="atl-crest.png" alt="Atlanta United FC" />
+      <div class="brand-text">
+        <div class="brand-name">ATL UTD LINEUP BUILDER</div>
+      </div>
+    </div>
+    <div class="header-center">
+      <div class="lineup-name-wrap">
+        <label class="lineup-name-label" for="lineupName">Lineup</label>
+        <input class="lineup-name-input" id="lineupName" type="text" value="MY LINEUP" placeholder="Name your lineup" maxlength="20" autocomplete="off" />
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" id="resetBtn" aria-label="Reset lineup">↺ Reset</button>
+      <button class="btn btn-red" id="saveBtn" aria-label="Save lineup as image">⬇ Save Image</button>
+    </div>
+  </header>
+
+  <!-- FORMATION BAR -->
+  <div class="fbar">
+    <span class="fbar-label">Formation</span>
+    <div class="fbar-divider"></div>
+    <div class="fbar-pills" id="fpills"></div>
+    <div class="fbar-count"><span id="countFilled">0</span>/11 placed</div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- PITCH AREA -->
+    <div class="pitch-area">
+      <div class="pitch-wrap" id="pitchWrap">
+        <div class="pitch" id="pitch">
+          <!-- SVG field markings injected by JS -->
+
+          <!-- Crest watermark in pitch center -->
+          <div class="pitch-crest-wrap">
+            <img class="pitch-crest-svg" src="atl-crest.png" alt="" />
+          </div>
+
+          <div class="pitch-instruction" id="pitchInstruction">Tap a player · tap a position · or drag & drop · tap a token to remove</div>
+          <svg id="drawingLayer" class="drawing-layer" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <div class="selected-banner" id="selectedBanner" role="status" aria-live="polite">
+          <span id="bannerText">Select a position on the pitch</span>
+          <button class="banner-dismiss" id="bannerDismiss" aria-label="Cancel player selection">✕ CANCEL</button>
+        </div>
+      </div>
+      <!-- DRAW TOOLBAR -->
+      <div class="draw-toolbar" id="drawToolbar">
+        <button class="dtool-toggle" id="drawToggle" aria-pressed="false" aria-label="Toggle drawing mode">✏ DRAW</button>
+        <div class="dtool-panel" id="drawToolsPanel" hidden>
+          <div class="dtool-sep"></div>
+          <button class="dtool active" data-tool="arrow" aria-pressed="true"  title="Arrow (→)">→</button>
+          <button class="dtool"        data-tool="line"  aria-pressed="false" title="Line (─)">─</button>
+          <button class="dtool"        data-tool="pen"   aria-pressed="false" title="Pen (freehand)">✏</button>
+          <div class="dtool-sep"></div>
+          <button class="dcolor active" data-color="#FFFFFF" style="background:#FFFFFF" aria-label="White"  aria-pressed="true"></button>
+          <button class="dcolor"        data-color="#C4AF7E" style="background:#C4AF7E" aria-label="Gold"   aria-pressed="false"></button>
+          <button class="dcolor"        data-color="#810003" style="background:#810003" aria-label="Red"    aria-pressed="false"></button>
+          <button class="dcolor"        data-color="#5BCFFF" style="background:#5BCFFF" aria-label="Cyan"   aria-pressed="false"></button>
+          <button class="dcolor"        data-color="#FFD966" style="background:#FFD966" aria-label="Yellow" aria-pressed="false"></button>
+          <button class="dcolor"        data-color="#70E88A" style="background:#70E88A" aria-label="Green"  aria-pressed="false"></button>
+          <div class="dtool-sep"></div>
+          <button class="dwidth"        data-width="0.6" aria-label="Thin stroke"   aria-pressed="false"><svg width="18" height="10" viewBox="0 0 18 10"><line x1="1" y1="5" x2="17" y2="5" stroke="currentColor" stroke-width="1.5"/></svg></button>
+          <button class="dwidth active" data-width="1.3" aria-label="Medium stroke" aria-pressed="true" ><svg width="18" height="10" viewBox="0 0 18 10"><line x1="1" y1="5" x2="17" y2="5" stroke="currentColor" stroke-width="3.5"/></svg></button>
+          <button class="dwidth"        data-width="2.4" aria-label="Thick stroke"  aria-pressed="false"><svg width="18" height="10" viewBox="0 0 18 10"><line x1="1" y1="5" x2="17" y2="5" stroke="currentColor" stroke-width="6"/></svg></button>
+          <div class="dtool-sep"></div>
+          <button class="dtool" id="undoDrawing"  aria-label="Undo last drawing"  title="Undo">↩</button>
+          <button class="dtool" id="clearDrawings" aria-label="Clear all drawings" title="Clear drawings">⌫</button>
+          <div class="dtool-sep"></div>
+          <button class="dtool" id="addBallBtn" aria-label="Add soccer ball to pitch" title="Add ball to pitch" style="font-size:1rem">⚽</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-heading">Squad Roster</div>
+        <div class="sidebar-sub">Select a player, then tap a position</div>
+      </div>
+      <div class="squad-list" id="squadList"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CREST SVG BUILDER (replaced by atl-crest.png)
+// ═══════════════════════════════════════════════════════
+
+function buildCrest(svgEl) { return; // no-op, real PNG used
+  const cx = 100, cy = 100;
+
+  // Helper: rotate(deg, px, py) transform string
+  function rot(deg, x, y) {
+    return `rotate(${deg.toFixed(2)},${x.toFixed(2)},${y.toFixed(2)})`;
+  }
+
+  // Helper: position on circle at given angle (deg, clockwise from top)
+  function circlePoint(r, angleDeg) {
+    const rad = angleDeg * Math.PI / 180;
+    return { x: cx + r * Math.sin(rad), y: cy - r * Math.cos(rad) };
+  }
+
+  // Build arc text characters using per-character rotation around center
+  function arcChars(text, radius, startDeg, endDeg, flip) {
+    const chars = text.split('');
+    const n = chars.length;
+    const step = n > 1 ? (endDeg - startDeg) / (n - 1) : 0;
+    const ns = 'http://www.w3.org/2000/svg';
+    const frag = document.createDocumentFragment();
+
+    chars.forEach((ch, i) => {
+      if (ch === ' ') return;
+      const angle = startDeg + i * step;
+      const p = circlePoint(radius, angle);
+
+      // Each character: rotate the entire position around the circle center by `angle`,
+      // so the character sits on the arc and is tangentially oriented.
+      // For bottom text (flip=true), add 180° to stand it upright from outside.
+      const rotation = flip ? angle + 180 : angle;
+      const baseline = flip ? 'auto' : 'hanging';
+      const fontSize = flip ? 10.5 : 13;
+
+      const t = document.createElementNS(ns, 'text');
+      t.setAttribute('x', p.x.toFixed(2));
+      t.setAttribute('y', p.y.toFixed(2));
+      t.setAttribute('transform', rot(rotation, p.x, p.y));
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('dominant-baseline', baseline);
+      t.setAttribute('font-family', "'Oswald','Arial Black',sans-serif");
+      t.setAttribute('font-weight', '700');
+      t.setAttribute('font-size', fontSize);
+      t.setAttribute('fill', '#A3956A');
+      t.textContent = ch;
+      frag.appendChild(t);
+    });
+    return frag;
+  }
+
+  const ns = 'http://www.w3.org/2000/svg';
+
+  function el(tag, attrs, children) {
+    const e = document.createElementNS(ns, tag);
+    Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+    if (children) children.forEach(c => e.appendChild(c));
+    return e;
+  }
+
+  function rect(x, y, w, h, fill, extra = {}) {
+    return el('rect', { x, y, width: w, height: h, fill, ...extra });
+  }
+  function poly(points, fill) {
+    return el('polygon', { points, fill });
+  }
+  function circle(cx_, cy_, r, fill, stroke, sw) {
+    const attrs = { cx: cx_, cy: cy_, r, fill };
+    if (stroke) { attrs.stroke = stroke; attrs['stroke-width'] = sw || 1.5; }
+    return el('circle', attrs);
+  }
+
+  // ── BACKGROUND ──────────────────────────────────────
+  svgEl.appendChild(circle(cx, cy, 100, '#1A1815'));
+
+  // ── GOLD RINGS ──────────────────────────────────────
+  svgEl.appendChild(circle(cx, cy, 98, 'none', '#A3956A', 2.2));
+  svgEl.appendChild(circle(cx, cy, 80, 'none', '#A3956A', 1.8));
+
+  // ── INNER CRIMSON CIRCLE ────────────────────────────
+  svgEl.appendChild(circle(cx, cy, 78, '#6B1422'));
+
+  // ── VERTICAL RED STRIPE HIGHLIGHTS (top & bottom) ───
+  const clipId = 'innerClip_' + Math.random().toString(36).slice(2);
+  const defs = el('defs', {});
+  const cp   = el('clipPath', { id: clipId });
+  cp.appendChild(circle(cx, cy, 78, 'none'));
+  defs.appendChild(cp);
+  svgEl.appendChild(defs);
+
+  function clippedRect(x, y, w, h, fill) {
+    return el('rect', { x, y, width: w, height: h, fill, 'clip-path': `url(#${clipId})` });
+  }
+  svgEl.appendChild(clippedRect(86, 22, 28, 34, '#8C1828'));   // top stripe
+  svgEl.appendChild(clippedRect(86, 144, 28, 34, '#8C1828'));  // bottom stripe
+
+  // ── GOLD "A" MONOGRAM ───────────────────────────────
+  const gold = '#A3956A';
+  const crimson = '#6B1422';
+
+  // Top crossbar (full width cap)
+  svgEl.appendChild(rect(51, 34, 98, 10, gold));
+
+  // Left pillar body
+  svgEl.appendChild(rect(57, 44, 19, 67, gold));
+  // Right pillar body
+  svgEl.appendChild(rect(124, 44, 19, 67, gold));
+
+  // Left leg  (trapezoid, outer edge angles outward)
+  svgEl.appendChild(poly('57,111 76,111 76,168 37,168', gold));
+  // Right leg
+  svgEl.appendChild(poly('143,111 124,111 124,168 163,168', gold));
+
+  // A-crossbar (horizontal bar connecting inner leg edges)
+  svgEl.appendChild(rect(76, 130, 48, 10, gold));
+
+  // RED COUNTERS (punch holes through the gold)
+  // Pillar gap (space between pillars, above crossbar)
+  svgEl.appendChild(rect(76, 44, 48, 86, crimson));    // y=44 to y=130
+  // Counter below crossbar (the "hole" in the A)
+  svgEl.appendChild(rect(76, 140, 48, 28, crimson));   // y=140 to y=168
+
+  // ── DASH SEPARATORS ─────────────────────────────────
+  svgEl.appendChild(rect(18, 97, 13, 6, gold, { rx: 1 }));
+  svgEl.appendChild(rect(169, 97, 13, 6, gold, { rx: 1 }));
+
+  // ── ARC TEXT ────────────────────────────────────────
+  // "ATLANTA" on top arc: angles -46° to +46° from top, r=87
+  svgEl.appendChild(arcChars('ATLANTA', 87, -46, 46, false));
+
+  // "UNITED FC" on bottom arc: center at 180°, r=86
+  // span from 131° to 229° (98° total, 8 steps for 9 chars)
+  svgEl.appendChild(arcChars('UNITED FC', 86, 131, 229, true));
+}
+
+// ═══════════════════════════════════════════════════════
+// PITCH SVG
+// ═══════════════════════════════════════════════════════
+
+function buildPitchSVG() {
+  return `<svg class="pitch-svg" viewBox="0 0 100 154" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+  <!-- Base: deep black -->
+  <rect width="100" height="154" fill="#1A1815"/>
+  <!-- Alternating dark-red stripes -->
+  <rect y="0"   width="100" height="14" fill="#2A080F"/>
+  <rect y="28"  width="100" height="14" fill="#2A080F"/>
+  <rect y="56"  width="100" height="14" fill="#2A080F"/>
+  <rect y="84"  width="100" height="14" fill="#2A080F"/>
+  <rect y="112" width="100" height="14" fill="#2A080F"/>
+  <rect y="140" width="100" height="14" fill="#2A080F"/>
+  <radialGradient id="vig" cx="50%" cy="50%" r="55%">
+    <stop offset="40%" stop-color="transparent"/>
+    <stop offset="100%" stop-color="rgba(0,0,0,0.5)"/>
+  </radialGradient>
+  <rect width="100" height="154" fill="url(#vig)"/>
+  <!-- Boundary -->
+  <rect x="3" y="3" width="94" height="148" fill="none" stroke="rgba(163,149,106,0.75)" stroke-width="0.6"/>
+  <!-- Halfway line -->
+  <line x1="3" y1="77" x2="97" y2="77" stroke="rgba(163,149,106,0.75)" stroke-width="0.6"/>
+  <!-- Centre circle + spot -->
+  <circle cx="50" cy="77" r="13" fill="none" stroke="rgba(163,149,106,0.75)" stroke-width="0.6"/>
+  <circle cx="50" cy="77" r="0.9" fill="rgba(163,149,106,0.9)"/>
+  <!-- TOP: penalty area + goal area + spot + arc -->
+  <rect x="22" y="3" width="56" height="23" fill="none" stroke="rgba(163,149,106,0.75)" stroke-width="0.6"/>
+  <rect x="37" y="3" width="26" height="8"  fill="none" stroke="rgba(163,149,106,0.75)" stroke-width="0.6"/>
+  <circle cx="50" cy="19" r="0.8" fill="rgba(163,149,106,0.9)"/>
+  <path d="M 35 26 A 12 12 0 0 0 65 26" fill="none" stroke="rgba(163,149,106,0.75)" stroke-width="0.6"/>
+  <rect x="45" y="1" width="10" height="3" fill="none" stroke="rgba(163,149,106,0.85)" stroke-width="0.85"/>
+  <!-- BOTTOM: penalty area + goal area + spot + arc -->
+  <rect x="22" y="128" width="56" height="23" fill="none" stroke="rgba(163,149,106,0.75)" stroke-width="0.6"/>
+  <rect x="37" y="143" width="26" height="8"  fill="none" stroke="rgba(163,149,106,0.75)" stroke-width="0.6"/>
+  <circle cx="50" cy="135" r="0.8" fill="rgba(163,149,106,0.9)"/>
+  <path d="M 35 128 A 12 12 0 0 1 65 128" fill="none" stroke="rgba(163,149,106,0.75)" stroke-width="0.6"/>
+  <rect x="45" y="150" width="10" height="3" fill="none" stroke="rgba(163,149,106,0.85)" stroke-width="0.85"/>
+  <!-- Corner arcs -->
+  <path d="M 3 7 A 4 4 0 0 0 7 3"       fill="none" stroke="rgba(163,149,106,0.75)" stroke-width="0.6"/>
+  <path d="M 97 7 A 4 4 0 0 1 93 3"     fill="none" stroke="rgba(163,149,106,0.75)" stroke-width="0.6"/>
+  <path d="M 3 147 A 4 4 0 0 1 7 151"   fill="none" stroke="rgba(163,149,106,0.75)" stroke-width="0.6"/>
+  <path d="M 97 147 A 4 4 0 0 0 93 151" fill="none" stroke="rgba(163,149,106,0.75)" stroke-width="0.6"/>
+</svg>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// ROSTER DATA
+// ═══════════════════════════════════════════════════════
+
+const PLAYERS = {
+  GK:  [
+    { id:'hoyos',   name:'Hoyos',   full:'Lucas Hoyos',    num:1  },
+    { id:'hibbert', name:'Hibbert', full:'Jayden Hibbert', num:42 },
+  ],
+  DEF: [
+    { id:'hernandez',  name:'Hernández',  full:'Ronald Hernández',  num:2  },
+    { id:'baez',       name:'Báez',       full:'Elías Báez',         num:3  },
+    { id:'mihaj',      name:'Mihaj',      full:'Enea Mihaj',         num:4  },
+    { id:'gregersen',  name:'Gregersen',  full:'Stian Gregersen',    num:5  },
+    { id:'berrocal',   name:'Berrocal',   full:'Juan Berrocal',      num:6  },
+    { id:'amador',     name:'Amador',     full:'Pedro Amador',       num:18 },
+    { id:'edwards',    name:'Edwards',    full:'Matt Edwards',       num:47 },
+    { id:'chong_qui',  name:'Chong Qui',  full:'Dominik Chong Qui', num:50 },
+    { id:'jacob',      name:'Jacob',      full:'Tomás Jacob',        num:55 },
+  ],
+  MID: [
+    { id:'alzate',     name:'Alzate',     full:'Steven Alzate',      num:7  },
+    { id:'muyumba',    name:'Muyumba',    full:'Tristan Muyumba',    num:8  },
+    { id:'lobjanidze', name:'Lobjanidze', full:'Saba Lobjanidze',    num:11 },
+    { id:'gill',       name:'Gill',       full:'Adrian Gill',        num:16 },
+    { id:'brennan',    name:'Brennan',    full:'Luke Brennan',       num:20 },
+    { id:'torres',     name:'Torres',     full:'Adyn Torres',        num:23 },
+    { id:'reilly',     name:'Reilly',     full:'Will Reilly',        num:28 },
+    { id:'fortune',    name:'Fortune',    full:'Ajani Fortune',      num:35 },
+    { id:'pita',       name:'Pita',       full:'Santiago Pita',      num:40 },
+    { id:'csanchez',   name:'Sanchez',    full:'Cooper Sanchez',     num:48 },
+    { id:'miranchuk',  name:'Miranchuk',  full:'Alexey Miranchuk',   num:59 },
+    { id:'galarza',    name:'Galarza',    full:'Matías Galarza',     num:88 },
+  ],
+  FWD: [
+    { id:'latte_lath', name:'Latte Lath', full:'Emmanuel Latte Lath', num:9  },
+    { id:'almiron',    name:'Almirón',    full:'Miguel Almirón',       num:10, imgTop:'-28%', imgLeft:'-140%' },
+    { id:'santos',     name:'Santos',     full:'Sergio Santos',        num:19 },
+    { id:'picault',    name:'Picault',    full:'Fafa Picault',         num:22 },
+    { id:'togashi',    name:'Togashi',    full:'Cayman Togashi',       num:30 },
+  ],
+};
+
+const GROUP_LABELS = { GK:'Goalkeepers', DEF:'Defenders', MID:'Midfielders', FWD:'Forwards' };
+
+// Maps player id → roster image filename (handles special cases)
+const IMG_MAP = {
+  chong_qui:  'chong-qui',
+  lobjanidze: 'saba',
+  csanchez:   'sanchez',
+  latte_lath: 'lattelath',
+};
+
+// App-themed placeholder for custom players — gold silhouette on dark background
+const CUSTOM_PLAYER_IMG = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#1A1815"/><circle cx="50" cy="33" r="19" fill="#C4AF7E" opacity="0.65"/><path d="M8 100 C8 64 32 58 50 58 C68 58 92 64 92 100Z" fill="#C4AF7E" opacity="0.65"/><circle cx="50" cy="33" r="19" fill="none" stroke="#A3956A" stroke-width="1.5" opacity="0.4"/></svg>`)}`;
+
+function playerImg(p) {
+  if (p.isCustom) return CUSTOM_PLAYER_IMG;
+  const file = IMG_MAP[p.id] || p.id;
+  return `references/roster/${file}.png`;
+}
+function playerImgStyle(p) {
+  if (p.isCustom) return 'width:100%;height:100%;left:0;top:0;object-fit:cover;';
+  if (!p.imgTop && !p.imgLeft) return '';
+  return `top:${p.imgTop ?? '-20%'};left:${p.imgLeft ?? '-150%'};`;
+}
+
+// ═══════════════════════════════════════════════════════
+// FORMATIONS
+// ═══════════════════════════════════════════════════════
+
+const FORMATIONS = {
+  '4-3-3': [
+    {id:'gk', label:'GK', x:50, y:90},
+    {id:'rb', label:'RB', x:81, y:74}, {id:'cb1',label:'CB', x:62, y:77},
+    {id:'cb2',label:'CB', x:38, y:77}, {id:'lb', label:'LB', x:19, y:74},
+    {id:'rcm',label:'CM', x:68, y:52}, {id:'cm', label:'CM', x:50, y:50},
+    {id:'lcm',label:'CM', x:32, y:52},
+    {id:'rw', label:'RW', x:80, y:22}, {id:'st', label:'ST', x:50, y:17},
+    {id:'lw', label:'LW', x:20, y:22},
+  ],
+  '4-2-3-1': [
+    {id:'gk', label:'GK', x:50, y:90},
+    {id:'rb', label:'RB', x:81, y:74}, {id:'cb1',label:'CB', x:62, y:77},
+    {id:'cb2',label:'CB', x:38, y:77}, {id:'lb', label:'LB', x:19, y:74},
+    {id:'rdm',label:'DM', x:62, y:58}, {id:'ldm',label:'DM', x:38, y:58},
+    {id:'ram',label:'AM', x:76, y:37}, {id:'cam',label:'CAM',x:50, y:34},
+    {id:'lam',label:'AM', x:24, y:37},
+    {id:'st', label:'ST', x:50, y:17},
+  ],
+  '4-4-2': [
+    {id:'gk', label:'GK', x:50, y:90},
+    {id:'rb', label:'RB', x:81, y:74}, {id:'cb1',label:'CB', x:62, y:77},
+    {id:'cb2',label:'CB', x:38, y:77}, {id:'lb', label:'LB', x:19, y:74},
+    {id:'rm', label:'RM', x:82, y:50}, {id:'rcm',label:'CM', x:61, y:52},
+    {id:'lcm',label:'CM', x:39, y:52}, {id:'lm', label:'LM', x:18, y:50},
+    {id:'rst',label:'ST', x:63, y:20}, {id:'lst',label:'ST', x:37, y:20},
+  ],
+  '3-5-2': [
+    {id:'gk', label:'GK',  x:50, y:90},
+    {id:'rcb',label:'CB',  x:70, y:78}, {id:'cb', label:'CB',  x:50, y:80},
+    {id:'lcb',label:'CB',  x:30, y:78},
+    {id:'rwb',label:'RWB', x:87, y:55}, {id:'rcm',label:'CM',  x:65, y:50},
+    {id:'cm', label:'CM',  x:50, y:48}, {id:'lcm',label:'CM',  x:35, y:50},
+    {id:'lwb',label:'LWB', x:13, y:55},
+    {id:'rst',label:'ST',  x:63, y:20}, {id:'lst',label:'ST',  x:37, y:20},
+  ],
+  '3-4-3': [
+    {id:'gk', label:'GK', x:50, y:90},
+    {id:'rcb',label:'CB', x:70, y:78}, {id:'cb', label:'CB', x:50, y:80},
+    {id:'lcb',label:'CB', x:30, y:78},
+    {id:'rcm',label:'CM', x:70, y:52}, {id:'cm1',label:'CM', x:56, y:53},
+    {id:'cm2',label:'CM', x:44, y:53}, {id:'lcm',label:'CM', x:30, y:52},
+    {id:'rw', label:'RW', x:80, y:22}, {id:'st', label:'ST', x:50, y:17},
+    {id:'lw', label:'LW', x:20, y:22},
+  ],
+  '5-3-2': [
+    {id:'gk', label:'GK',  x:50, y:90},
+    {id:'rwb',label:'RWB', x:87, y:70}, {id:'rcb',label:'CB',  x:70, y:77},
+    {id:'cb', label:'CB',  x:50, y:79}, {id:'lcb',label:'CB',  x:30, y:77},
+    {id:'lwb',label:'LWB', x:13, y:70},
+    {id:'rcm',label:'CM',  x:65, y:50}, {id:'cm', label:'CM',  x:50, y:48},
+    {id:'lcm',label:'CM',  x:35, y:50},
+    {id:'rst',label:'ST',  x:63, y:20}, {id:'lst',label:'ST',  x:37, y:20},
+  ],
+  '4-1-4-1': [
+    {id:'gk', label:'GK', x:50, y:90},
+    {id:'rb', label:'RB', x:81, y:74}, {id:'cb1',label:'CB', x:62, y:77},
+    {id:'cb2',label:'CB', x:38, y:77}, {id:'lb', label:'LB', x:19, y:74},
+    {id:'dm', label:'DM', x:50, y:62},
+    {id:'rm', label:'RM', x:83, y:44}, {id:'rcm',label:'CM', x:63, y:43},
+    {id:'lcm',label:'CM', x:37, y:43}, {id:'lm', label:'LM', x:17, y:44},
+    {id:'st', label:'ST', x:50, y:17},
+  ],
+  'CUSTOM': [],
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+
+let formation        = 'CUSTOM';
+let lineup           = {};
+let selected         = null;
+let customPlacements = []; // [{pid, x, y}] — used when formation === 'CUSTOM'
+let draggingTokenPid = null; // pid of a pitch token being repositioned
+let customPlayersData = []; // [{id, name, isCustom}] — user-created players
+let customPlayerSeq   = 0;  // increments to generate unique IDs
+let drawings          = []; // [{type,color,width,...}] — pitch annotations
+let drawMode          = null; // null | 'arrow' | 'line' | 'pen'
+let drawColor         = '#FFFFFF';
+let drawWidth         = 1.3;  // SVG viewBox units (0-100 coord space)
+let _drawing          = false;
+let _drawStart        = null; // {x,y}
+let _penPts           = [];
+let _liveEl           = null; // in-progress SVG group
+let ballPlacements    = [];   // [{id, x, y}] — soccer balls on pitch
+let ballSeq           = 0;
+
+// ═══════════════════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════════════════
+
+const STORAGE_KEY = 'atl-utd-lineup';
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ formation, lineup, customPlacements, customPlayersData, customPlayerSeq, drawings, ballPlacements, ballSeq })); } catch {}
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    const s = JSON.parse(saved);
+    if (s.formation && s.formation in FORMATIONS) {
+      formation         = s.formation;
+      lineup            = s.lineup            || {};
+      customPlacements  = s.customPlacements  || [];
+      customPlayersData = (s.customPlayersData || []).map(p => ({
+        full: p.full || p.name, num: p.num || '', ...p
+      }));
+      customPlayerSeq   = s.customPlayerSeq   || 0;
+      drawings          = s.drawings          || [];
+      ballPlacements    = s.ballPlacements    || [];
+      ballSeq           = s.ballSeq           || 0;
+    }
+  } catch {}
+}
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+
+function playerById(id) {
+  const custom = customPlayersData.find(p => p.id === id);
+  if (custom) return custom;
+  for (const grp of Object.values(PLAYERS)) {
+    const p = grp.find(p => p.id === id);
+    if (p) return p;
+  }
+}
+
+function posLabel(pid) {
+  if (customPlayersData.find(p => p.id === pid)) return 'CUST';
+  for (const [pos, players] of Object.entries(PLAYERS)) {
+    if (players.find(p => p.id === pid)) return pos;
+  }
+  return '?';
+}
+
+function getAssigned() {
+  if (formation === 'CUSTOM') return new Set(customPlacements.map(p => p.pid));
+  return new Set(Object.values(lineup));
+}
+function countPlaced() {
+  if (formation === 'CUSTOM') return customPlacements.length;
+  return Object.keys(lineup).length;
+}
+function updateCount() { document.getElementById('countFilled').textContent = countPlaced(); }
+
+function showBanner(show) {
+  const el = document.getElementById('selectedBanner');
+  if (show && selected) {
+    const p = playerById(selected);
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+    const verb = isTouchDevice ? 'tap' : 'click';
+    const hint = formation === 'CUSTOM' ? `${verb} or drag anywhere on the pitch` : 'pick a position';
+    const nameDisplay = p.isCustom ? p.name : `#${p.num} ${p.full}`;
+    document.getElementById('bannerText').textContent = `${nameDisplay} — ${hint}`;
+    el.classList.add('visible');
+  } else {
+    el.classList.remove('visible');
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER: PILLS
+// ═══════════════════════════════════════════════════════
+
+function renderPills() {
+  const wrap = document.getElementById('fpills');
+  wrap.innerHTML = '';
+  Object.keys(FORMATIONS).forEach(f => {
+    const pill = document.createElement('button');
+    pill.className = 'fpill' + (f === formation ? ' active' : '');
+    pill.textContent = f;
+    pill.setAttribute('aria-pressed', f === formation ? 'true' : 'false');
+    pill.addEventListener('click', () => selectFormation(f));
+    wrap.appendChild(pill);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER: PITCH
+// ═══════════════════════════════════════════════════════
+
+function renderPitch() {
+  const pitch = document.getElementById('pitch');
+  pitch.querySelectorAll('.pslot, .ptoken').forEach(e => e.remove());
+
+  if (formation === 'CUSTOM') {
+    renderCustomPitch(pitch);
+  } else {
+    pitch.onclick     = null;
+    pitch.ondragover  = null;
+    pitch.ondrop      = null;
+    pitch.classList.remove('custom-mode');
+    FORMATIONS[formation].forEach(slot => {
+      const pid = lineup[slot.id];
+      if (pid) renderToken(pitch, slot, pid);
+      else      renderSlot(pitch, slot);
+    });
+    updateSlotHighlights();
+  }
+  updateCount();
+  renderBalls();
+}
+
+function renderCustomPitch(pitch) {
+  pitch.classList.add('custom-mode');
+  pitch.style.cursor = selected ? 'crosshair' : 'default';
+
+  // Click anywhere to place selected player
+  pitch.onclick = e => {
+    if (!selected || e.target.closest('.ptoken')) return;
+    const rect = pitch.getBoundingClientRect();
+    const x = parseFloat(((e.clientX - rect.left) / rect.width  * 100).toFixed(1));
+    const y = parseFloat(((e.clientY - rect.top)  / rect.height * 100).toFixed(1));
+    if (customPlacements.length < 11 && !customPlacements.find(p => p.pid === selected)) {
+      customPlacements.push({ pid: selected, x, y });
+      selected = null;
+      saveState();
+      renderPitch(); renderSquad(); showBanner(false);
+    }
+  };
+
+  // Allow drops anywhere on pitch
+  pitch.ondragover = e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
+  pitch.ondrop = e => {
+    e.preventDefault();
+    if (!draggingTokenPid) return; // squad-card drops handled by pointer events
+    const rect = pitch.getBoundingClientRect();
+    const x = parseFloat(((e.clientX - rect.left) / rect.width  * 100).toFixed(1));
+    const y = parseFloat(((e.clientY - rect.top)  / rect.height * 100).toFixed(1));
+    const cp = customPlacements.find(p => p.pid === draggingTokenPid);
+    if (cp) { cp.x = x; cp.y = y; }
+    draggingTokenPid = null;
+    selected = null;
+    saveState();
+    renderPitch(); renderSquad(); showBanner(false);
+  };
+
+  // Render each placed player as a draggable token
+  customPlacements.forEach(({ pid, x, y }) => {
+    const p = playerById(pid);
+    if (!p) return;
+    const el = document.createElement('div');
+    el.className = 'ptoken';
+    el.style.left = x + '%';
+    el.style.top  = y + '%';
+    el.draggable  = true;
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('aria-label', `${p.full} (${posLabel(pid)}) — press to remove`);
+    el.title = `Drag to reposition · Click to remove ${p.full}`;
+    el.innerHTML = `
+      <div class="token-circle">
+        <img src="${playerImg(p)}" alt="${p.name}" draggable="false" style="${playerImgStyle(p)}" onerror="this.style.display='none'" />
+        <div class="token-pos-badge">${posLabel(pid)}</div>
+      </div>
+      <div class="token-name">${p.name}</div>`;
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      customPlacements = customPlacements.filter(cp => cp.pid !== pid);
+      saveState();
+      renderPitch(); renderSquad(); showBanner(false);
+    });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault(); e.stopPropagation();
+        customPlacements = customPlacements.filter(cp => cp.pid !== pid);
+        saveState();
+        renderPitch(); renderSquad(); showBanner(false);
+      }
+    });
+    el.addEventListener('dragstart', e => {
+      draggingTokenPid = pid;
+      e.dataTransfer.setData('text/plain', pid);
+      setTimeout(() => { el.style.opacity = '0.3'; }, 0);
+    });
+    el.addEventListener('dragend', () => {
+      el.style.opacity = '';
+      draggingTokenPid = null;
+    });
+    pitch.appendChild(el);
+  });
+}
+
+function renderSlot(pitch, slot) {
+  const el = document.createElement('div');
+  el.className = 'pslot';
+  el.style.left = slot.x + '%';
+  el.style.top  = slot.y + '%';
+  el.dataset.slotId = slot.id;
+  el.setAttribute('role', 'button');
+  el.setAttribute('tabindex', '0');
+  el.setAttribute('aria-label', `${slot.label} position`);
+  el.innerHTML = `<span class="pslot-label">${slot.label}</span>`;
+
+  el.addEventListener('click', () => { if (selected) assignToSlot(slot.id, selected); });
+  el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (selected) assignToSlot(slot.id, selected); } });
+  pitch.appendChild(el);
+}
+
+function renderToken(pitch, slot, pid) {
+  const p = playerById(pid);
+  if (!p) return;
+  const el = document.createElement('div');
+  el.className = 'ptoken';
+  el.style.left = slot.x + '%';
+  el.style.top  = slot.y + '%';
+  el.setAttribute('role', 'button');
+  el.setAttribute('tabindex', '0');
+  el.setAttribute('aria-label', `${p.full} at ${slot.label} — press to remove`);
+  el.title = `Click to remove ${p.full}`;
+  el.innerHTML = `
+    <div class="token-circle">
+      <img src="${playerImg(p)}" alt="${p.name}" draggable="false" style="${playerImgStyle(p)}" onerror="this.style.display='none'" />
+      <div class="token-pos-badge">${slot.label}</div>
+    </div>
+    <div class="token-name">${p.name}</div>`;
+  el.addEventListener('click', () => removeFromSlot(slot.id));
+  el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); removeFromSlot(slot.id); } });
+  pitch.appendChild(el);
+}
+
+function updateSlotHighlights() {
+  document.querySelectorAll('.pslot').forEach(el =>
+    el.classList.toggle('selected-target', !!selected)
+  );
+  if (formation === 'CUSTOM') {
+    const pitch = document.getElementById('pitch');
+    if (pitch) pitch.style.cursor = selected ? 'crosshair' : 'default';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// TOUCH DRAG: SQUAD → PITCH
+// ═══════════════════════════════════════════════════════
+
+function createDragGhost(pid) {
+  const p = playerById(pid);
+  if (!p) return null;
+  const g = document.createElement('div');
+  g.className = 'drag-ghost';
+  g.innerHTML = `
+    <div class="drag-ghost-img">
+      <img src="${playerImg(p)}" draggable="false"
+           style="${playerImgStyle(p)}"
+           onerror="this.style.display='none'" />
+    </div>
+    <span class="drag-ghost-name">${p.name}</span>`;
+  document.body.appendChild(g);
+  return g;
+}
+
+function clearDragHighlights() {
+  document.querySelectorAll('.pslot.drop-over').forEach(s => s.classList.remove('drop-over'));
+  const pitch = document.getElementById('pitch');
+  if (pitch) pitch.classList.remove('drag-over-pitch');
+}
+
+function initCardTouchDrag(card, pid) {
+  card.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    const startX = e.clientX, startY = e.clientY, ptId = e.pointerId;
+    const isTouch = e.pointerType === 'touch';
+
+    // Touch: delay capture so browser can scroll during the hold window.
+    // Mouse: capture immediately for instant drag.
+    let readyToDrag = !isTouch;
+    let holdTimer = null, dragging = false, ghost = null, rafId = null;
+    let lastX = startX, lastY = startY;
+
+    function cleanup() {
+      if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+      if (rafId)     { cancelAnimationFrame(rafId); rafId = null; }
+      card.classList.remove('hold-pending', 'drag-ready');
+      card.style.opacity = '';
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      clearDragHighlights();
+      if (ghost) { ghost.remove(); ghost = null; }
+    }
+
+    // Unified RAF loop: auto-scroll + drop-target detection (once per frame)
+    function frame() {
+      const ZONE = window.innerHeight * 0.2;
+      if      (lastY < ZONE)                      window.scrollBy(0, -Math.ceil((ZONE - lastY) / 6 + 1));
+      else if (lastY > window.innerHeight - ZONE) window.scrollBy(0,  Math.ceil((lastY - (window.innerHeight - ZONE)) / 6 + 1));
+      const el = document.elementFromPoint(lastX, lastY);
+      clearDragHighlights();
+      if (el) {
+        const slot  = el.closest('.pslot');
+        const pitch = el.closest('#pitch');
+        if (slot)                                 slot.classList.add('drop-over');
+        else if (pitch && formation === 'CUSTOM') pitch.classList.add('drag-over-pitch');
+      }
+      if (dragging) rafId = requestAnimationFrame(frame);
+    }
+
+    function onMove(ev) {
+      if (ev.pointerId !== ptId) return;
+      lastX = ev.clientX; lastY = ev.clientY;
+
+      if (!readyToDrag) {
+        // Still in the hold window — cancel if the finger moves (scroll intent).
+        // pointercancel also fires if the browser claims the gesture for scroll.
+        if (Math.hypot(lastX - startX, lastY - startY) > 10) {
+          cleanup();
+          card.removeEventListener('pointermove',   onMove);
+          card.removeEventListener('pointerup',     onUp);
+          card.removeEventListener('pointercancel', onCancel);
+        }
+        return;
+      }
+
+      if (!dragging) {
+        // Require a small nudge to actually start the drag after hold confirms
+        if (Math.hypot(lastX - startX, lastY - startY) < (isTouch ? 5 : 10)) return;
+        dragging = true;
+        ev.preventDefault();
+        card.classList.remove('drag-ready');
+        ghost = createDragGhost(pid);
+        card.style.opacity = '0.35';
+        document.body.style.cursor = 'grabbing';
+        document.body.style.userSelect = 'none';
+        selected = pid;
+        updateSlotHighlights();
+        rafId = requestAnimationFrame(frame);
+      }
+
+      // GPU-composited transform — zero layout reflow
+      ghost.style.transform =
+        `translate3d(${lastX}px,${lastY}px,0) translate(-50%,calc(-100% - 20px))`;
+    }
+
+    function onCancel(ev) {
+      if (ev.pointerId !== ptId) return;
+      // Browser claimed this touch for scrolling — quietly clean up
+      cleanup();
+      card.removeEventListener('pointermove',   onMove);
+      card.removeEventListener('pointerup',     onUp);
+      card.removeEventListener('pointercancel', onCancel);
+    }
+
+    function onUp(ev) {
+      if (ev.pointerId !== ptId) return;
+      card.removeEventListener('pointermove',   onMove);
+      card.removeEventListener('pointerup',     onUp);
+      card.removeEventListener('pointercancel', onCancel);
+      cleanup();
+
+      if (!dragging) return; // tap or hold-without-drag — let click handler fire
+      dragging = false;
+
+      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+      if (!el) { selected = null; renderSquad(); updateSlotHighlights(); showBanner(false); return; }
+
+      const slot    = el.closest('.pslot');
+      const pitch   = document.getElementById('pitch');
+      const onPitch = el.closest('#pitch');
+
+      if (slot && slot.dataset.slotId) {
+        assignToSlot(slot.dataset.slotId, pid);
+        selected = null;
+        saveState();
+        renderPitch(); renderSquad(); updateSlotHighlights(); showBanner(false);
+        showToast((playerById(pid)?.name || 'Player') + ' placed');
+      } else if (onPitch && pitch && formation === 'CUSTOM') {
+        const rect = pitch.getBoundingClientRect();
+        const px = parseFloat(((ev.clientX - rect.left) / rect.width  * 100).toFixed(1));
+        const py = parseFloat(((ev.clientY - rect.top)  / rect.height * 100).toFixed(1));
+        if (px >= 1 && px <= 99 && py >= 1 && py <= 99 &&
+            !customPlacements.find(cp => cp.pid === pid) && customPlacements.length < 11) {
+          customPlacements.push({ pid, x: px, y: py });
+          selected = null;
+          saveState();
+          renderPitch(); renderSquad(); showBanner(false);
+          showToast((playerById(pid)?.name || 'Player') + ' placed');
+          return;
+        }
+      }
+      selected = null;
+      renderSquad(); updateSlotHighlights(); showBanner(false);
+    }
+
+    card.addEventListener('pointermove',   onMove, { passive: false });
+    card.addEventListener('pointerup',     onUp);
+    card.addEventListener('pointercancel', onCancel);
+
+    if (isTouch) {
+      // Show the growing ring immediately so user knows something is happening
+      card.classList.add('hold-pending');
+      holdTimer = setTimeout(() => {
+        holdTimer = null;
+        readyToDrag = true;
+        card.classList.remove('hold-pending');
+        card.classList.add('drag-ready');
+        // Capture pointer now — scroll is no longer possible for this touch
+        try { card.setPointerCapture(ptId); } catch(_) {}
+        // Subtle haptic confirmation on Android
+        if (navigator.vibrate) navigator.vibrate(22);
+      }, 200);
+    } else {
+      try { card.setPointerCapture(ptId); } catch(_) {}
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER: SQUAD LIST
+// ═══════════════════════════════════════════════════════
+
+function renderSquad() {
+  const list = document.getElementById('squadList');
+  list.innerHTML = '';
+  const assigned = getAssigned();
+
+  // ── Custom Players Section ──
+  const customGroup = document.createElement('div');
+  customGroup.className = 'pos-group';
+  customGroup.innerHTML = `<div class="pos-group-label">CUSTOM PLAYERS</div>`;
+
+  customPlayersData.forEach(p => {
+    const onPitch = assigned.has(p.id);
+    const isSel   = selected === p.id;
+    const card = document.createElement('div');
+    card.className = `pcard${onPitch ? ' on-pitch' : ''}${isSel ? ' selected' : ''}`;
+    card.dataset.playerId = p.id;
+    card.setAttribute('role', onPitch ? 'listitem' : 'button');
+    card.setAttribute('tabindex', onPitch ? '-1' : '0');
+    card.setAttribute('aria-label', `${p.name}, custom player${onPitch ? ', on pitch' : isSel ? ', selected' : ''}`);
+    card.setAttribute('aria-pressed', isSel ? 'true' : 'false');
+
+    // Photo circle
+    const numDiv = document.createElement('div');
+    numDiv.className = 'card-num';
+    const img = document.createElement('img');
+    img.src = playerImg(p); img.alt = p.name; img.draggable = false;
+    img.style.cssText = playerImgStyle(p);
+    numDiv.appendChild(img);
+
+    // Info: editable name + label
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'card-info';
+    const nameInput = document.createElement('input');
+    nameInput.className = 'custom-name-input';
+    nameInput.value = p.name;
+    nameInput.placeholder = 'PLAYER NAME';
+    nameInput.setAttribute('aria-label', 'Custom player name');
+    nameInput.addEventListener('input', e => renameCustomPlayer(p.id, e.target.value));
+    nameInput.addEventListener('click', e => e.stopPropagation());
+    nameInput.addEventListener('keydown', e => e.stopPropagation());
+    const detailDiv = document.createElement('div');
+    detailDiv.className = 'card-detail';
+    detailDiv.textContent = 'CUSTOM PLAYER';
+    infoDiv.appendChild(nameInput);
+    infoDiv.appendChild(detailDiv);
+
+    // Remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'custom-remove-btn';
+    removeBtn.setAttribute('aria-label', `Remove ${p.name}`);
+    removeBtn.title = 'Remove player';
+    removeBtn.textContent = '✕';
+    removeBtn.addEventListener('click', e => { e.stopPropagation(); removeCustomPlayer(p.id); });
+
+    card.appendChild(numDiv);
+    card.appendChild(infoDiv);
+    card.appendChild(removeBtn);
+
+    if (!onPitch) {
+      card.addEventListener('click', () => {
+        selected = (selected === p.id) ? null : p.id;
+        renderSquad(); updateSlotHighlights(); showBanner(!!selected);
+      });
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+      });
+      initCardTouchDrag(card, p.id);
+    }
+    customGroup.appendChild(card);
+  });
+
+  // Add Custom Player button
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-custom-btn';
+  addBtn.setAttribute('aria-label', 'Add custom player');
+  addBtn.innerHTML = '<span style="font-size:1.1em;line-height:1">+</span> ADD CUSTOM PLAYER';
+  addBtn.addEventListener('click', addCustomPlayer);
+  customGroup.appendChild(addBtn);
+  list.appendChild(customGroup);
+
+  // ── Regular Players ──
+  Object.entries(PLAYERS).forEach(([pos, players]) => {
+    const group = document.createElement('div');
+    group.className = 'pos-group';
+    group.innerHTML = `<div class="pos-group-label">${GROUP_LABELS[pos]}</div>`;
+
+    players.forEach(p => {
+      const onPitch  = assigned.has(p.id);
+      const isSel    = selected === p.id;
+      const card = document.createElement('div');
+      card.className = `pcard${onPitch ? ' on-pitch' : ''}${isSel ? ' selected' : ''}`;
+      card.dataset.playerId = p.id;
+      card.setAttribute('role', onPitch ? 'listitem' : 'button');
+      card.setAttribute('tabindex', onPitch ? '-1' : '0');
+      card.setAttribute('aria-label', `${p.full}, ${pos}${onPitch ? ', on pitch' : isSel ? ', selected' : ''}`);
+      card.setAttribute('aria-pressed', isSel ? 'true' : 'false');
+      card.innerHTML = `
+        <div class="card-num"><img src="${playerImg(p)}" alt="${p.name}" draggable="false" style="${playerImgStyle(p)}" onerror="this.style.display='none'" /></div>
+        <div class="card-info">
+          <div class="card-name">${p.name}</div>
+          <div class="card-detail">${pos} · ${p.full}</div>
+        </div>
+        <div class="card-drag">${onPitch ? '' : '⠿'}</div>`;
+
+      if (!onPitch) {
+        card.addEventListener('click', () => {
+          selected = (selected === p.id) ? null : p.id;
+          renderSquad(); updateSlotHighlights(); showBanner(!!selected);
+        });
+        card.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+        });
+        initCardTouchDrag(card, p.id);
+      }
+      group.appendChild(card);
+    });
+    list.appendChild(group);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════
+
+function selectFormation(f) {
+  if (drawMode) { drawMode = null; updateDrawUI(); }
+  formation        = f;
+  lineup           = {};
+  customPlacements = [];
+  selected         = null;
+  saveState();
+  renderPills(); renderPitch(); renderSquad(); showBanner(false);
+}
+
+function assignToSlot(slotId, pid) {
+  for (const [sid, p] of Object.entries(lineup)) { if (p === pid) delete lineup[sid]; }
+  lineup[slotId] = pid;
+  selected = null;
+  saveState();
+  renderPitch(); renderSquad(); showBanner(false);
+}
+
+function removeFromSlot(slotId) {
+  delete lineup[slotId];
+  saveState();
+  renderPitch(); renderSquad();
+}
+
+function addCustomPlayer() {
+  customPlayerSeq++;
+  const id = `custom_${customPlayerSeq}`;
+  const defaultName = `PLAYER ${customPlayerSeq}`;
+  customPlayersData.push({ id, name: defaultName, full: defaultName, num: '', isCustom: true });
+  saveState();
+  renderSquad();
+  showToast('Custom player added');
+}
+
+function removeCustomPlayer(id) {
+  for (const [sid, pid] of Object.entries(lineup)) { if (pid === id) delete lineup[sid]; }
+  customPlacements = customPlacements.filter(cp => cp.pid !== id);
+  customPlayersData = customPlayersData.filter(p => p.id !== id);
+  if (selected === id) { selected = null; showBanner(false); }
+  saveState();
+  renderPitch(); renderSquad();
+}
+
+function renameCustomPlayer(id, name) {
+  const p = customPlayersData.find(p => p.id === id);
+  if (p) { p.name = name; p.full = name; saveState(); renderPitch(); }
+}
+
+// ═══════════════════════════════════════════════════════
+// DRAWING
+// ═══════════════════════════════════════════════════════
+
+function getDrawXY(e, svgEl) {
+  const r = svgEl.getBoundingClientRect();
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return {
+    x: +((cx - r.left) / r.width  * 100).toFixed(2),
+    y: +((cy - r.top)  / r.height * 100).toFixed(2)
+  };
+}
+
+function makeArrowhead(x1, y1, x2, y2, w, color) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const size  = Math.max(w * 2.8, 2.8);
+  const spread = 0.40;
+  const ax1 = x2 - size * Math.cos(angle - spread);
+  const ay1 = y2 - size * Math.sin(angle - spread);
+  const ax2 = x2 - size * Math.cos(angle + spread);
+  const ay2 = y2 - size * Math.sin(angle + spread);
+  const poly = document.createElementNS(ns, 'polygon');
+  poly.setAttribute('points', `${x2},${y2} ${ax1},${ay1} ${ax2},${ay2}`);
+  poly.setAttribute('fill', color);
+  return poly;
+}
+
+function penPointsToPath(pts) {
+  if (pts.length < 2) return '';
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const mx = (pts[i].x + pts[i + 1].x) / 2;
+    const my = (pts[i].y + pts[i + 1].y) / 2;
+    d += ` Q ${pts[i].x} ${pts[i].y} ${mx} ${my}`;
+  }
+  d += ` L ${pts[pts.length - 1].x} ${pts[pts.length - 1].y}`;
+  return d;
+}
+
+function drawingToGroup(d) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const g  = document.createElementNS(ns, 'g');
+
+  if (d.type === 'line' || d.type === 'arrow') {
+    const line = document.createElementNS(ns, 'line');
+    line.setAttribute('x1', d.x1); line.setAttribute('y1', d.y1);
+    line.setAttribute('x2', d.x2); line.setAttribute('y2', d.y2);
+    line.setAttribute('stroke', d.color);
+    line.setAttribute('stroke-width', d.width);
+    line.setAttribute('stroke-linecap', 'round');
+    g.appendChild(line);
+    if (d.type === 'arrow') {
+      const dx = d.x2 - d.x1, dy = d.y2 - d.y1;
+      if (Math.sqrt(dx * dx + dy * dy) > 1) {
+        g.appendChild(makeArrowhead(d.x1, d.y1, d.x2, d.y2, d.width, d.color));
+      }
+    }
+  } else if (d.type === 'pen') {
+    const pathD = penPointsToPath(d.points);
+    if (!pathD) return null;
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', pathD);
+    path.setAttribute('stroke', d.color);
+    path.setAttribute('stroke-width', d.width);
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    path.setAttribute('fill', 'none');
+    g.appendChild(path);
+  }
+  return g;
+}
+
+function renderDrawings() {
+  const svg = document.getElementById('drawingLayer');
+  if (!svg) return;
+  // Remove all child elements (preserve the SVG element itself)
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  drawings.forEach(d => {
+    const g = drawingToGroup(d);
+    if (g) svg.appendChild(g);
+  });
+}
+
+function toggleDrawMode() {
+  drawMode = drawMode ? null : 'arrow';
+  if (drawMode) {
+    // Exit player selection when entering draw mode
+    selected = null;
+    renderSquad(); updateSlotHighlights(); showBanner(false);
+  }
+  updateDrawUI();
+}
+
+function updateDrawUI() {
+  const toggle = document.getElementById('drawToggle');
+  const panel  = document.getElementById('drawToolsPanel');
+  const layer  = document.getElementById('drawingLayer');
+
+  toggle.classList.toggle('active', !!drawMode);
+  toggle.setAttribute('aria-pressed', drawMode ? 'true' : 'false');
+  if (drawMode) { panel.removeAttribute('hidden'); } else { panel.setAttribute('hidden', ''); }
+  layer.classList.toggle('draw-active', !!drawMode);
+
+  // Sync tool button states
+  document.querySelectorAll('.dtool[data-tool]').forEach(btn => {
+    const active = btn.dataset.tool === drawMode;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+
+  if (!drawMode) { _drawing = false; if (_liveEl) { _liveEl.remove(); _liveEl = null; } }
+}
+
+function initDrawEvents() {
+  const layer = document.getElementById('drawingLayer');
+
+  layer.addEventListener('pointerdown', e => {
+    if (!drawMode) return;
+    e.preventDefault();
+    layer.setPointerCapture(e.pointerId);
+    _drawing  = true;
+    _drawStart = getDrawXY(e, layer);
+    _penPts   = [_drawStart];
+    _liveEl   = null;
+  });
+
+  layer.addEventListener('pointermove', e => {
+    if (!_drawing || !drawMode) return;
+    e.preventDefault();
+    const cur = getDrawXY(e, layer);
+    const ns  = 'http://www.w3.org/2000/svg';
+
+    if (_liveEl) { _liveEl.remove(); _liveEl = null; }
+
+    const g = document.createElementNS(ns, 'g');
+    g.id = 'draw-live';
+
+    if (drawMode === 'pen') {
+      const last = _penPts[_penPts.length - 1];
+      const dx = cur.x - last.x, dy = cur.y - last.y;
+      if (dx * dx + dy * dy > 0.09) _penPts.push(cur); // min 0.3 SVG units
+      const pathD = penPointsToPath(_penPts);
+      if (pathD) {
+        const path = document.createElementNS(ns, 'path');
+        path.setAttribute('d', pathD);
+        path.setAttribute('stroke', drawColor);
+        path.setAttribute('stroke-width', drawWidth);
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke-linejoin', 'round');
+        path.setAttribute('fill', 'none');
+        g.appendChild(path);
+      }
+    } else {
+      const { x: x1, y: y1 } = _drawStart;
+      const { x: x2, y: y2 } = cur;
+      const line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+      line.setAttribute('stroke', drawColor);
+      line.setAttribute('stroke-width', drawWidth);
+      line.setAttribute('stroke-linecap', 'round');
+      g.appendChild(line);
+      if (drawMode === 'arrow') {
+        const dx = x2 - x1, dy = y2 - y1;
+        if (Math.sqrt(dx * dx + dy * dy) > 1) {
+          g.appendChild(makeArrowhead(x1, y1, x2, y2, drawWidth, drawColor));
+        }
+      }
+    }
+
+    layer.appendChild(g);
+    _liveEl = g;
+  });
+
+  layer.addEventListener('pointerup', e => {
+    if (!_drawing || !drawMode) return;
+    e.preventDefault();
+    _drawing = false;
+    const cur = getDrawXY(e, layer);
+    if (_liveEl) { _liveEl.remove(); _liveEl = null; }
+
+    if (drawMode === 'pen') {
+      if (_penPts.length >= 2) {
+        drawings.push({ type: 'pen', color: drawColor, width: drawWidth, points: [..._penPts] });
+        saveState(); renderDrawings();
+      }
+    } else {
+      const { x: x1, y: y1 } = _drawStart;
+      const { x: x2, y: y2 } = cur;
+      const dx = x2 - x1, dy = y2 - y1;
+      if (Math.sqrt(dx * dx + dy * dy) > 0.8) {
+        drawings.push({ type: drawMode, color: drawColor, width: drawWidth, x1, y1, x2, y2 });
+        saveState(); renderDrawings();
+      }
+    }
+    _penPts = []; _drawStart = null;
+  });
+
+  layer.addEventListener('pointercancel', () => {
+    _drawing = false;
+    if (_liveEl) { _liveEl.remove(); _liveEl = null; }
+    _penPts = [];
+  });
+}
+
+function undoLastDrawing() {
+  if (!drawings.length) return;
+  drawings.pop();
+  saveState(); renderDrawings();
+  showToast('Drawing undone');
+}
+
+function clearAllDrawings() {
+  if (!drawings.length) return;
+  if (!confirm('Clear all drawings from the pitch?')) return;
+  drawings = [];
+  saveState(); renderDrawings();
+  showToast('Drawings cleared');
+}
+
+// ═══════════════════════════════════════════════════════
+// PITCH BALL
+// ═══════════════════════════════════════════════════════
+
+const BALL_SVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="50" cy="50" r="46" fill="#f5f5f5" stroke="#1a1a1a" stroke-width="4"/>
+  <polygon points="50,13 62,28 57,46 43,46 38,28" fill="#111"/>
+  <polygon points="83,35 89,53 75,64 63,56 63,38" fill="#111"/>
+  <polygon points="77,79 61,84 51,71 60,57 76,62" fill="#111"/>
+  <polygon points="23,79 24,62 40,57 49,71 39,84" fill="#111"/>
+  <polygon points="17,35 37,38 37,56 25,64 11,53" fill="#111"/>
+</svg>`;
+
+function addBall() {
+  ballSeq++;
+  ballPlacements.push({ id: ballSeq, x: 50, y: 50 });
+  saveState();
+  renderBalls();
+  showToast('Ball added — drag to position');
+}
+
+function removeBall(id) {
+  ballPlacements = ballPlacements.filter(b => b.id !== id);
+  saveState();
+  renderBalls();
+}
+
+function renderBalls() {
+  document.querySelectorAll('.pitch-ball').forEach(el => el.remove());
+  const pitch = document.getElementById('pitch');
+  if (!pitch) return;
+
+  ballPlacements.forEach(b => {
+    const el = document.createElement('div');
+    el.className = 'pitch-ball';
+    el.style.left = b.x + '%';
+    el.style.top  = b.y + '%';
+    el.setAttribute('title', 'Drag to move · click to remove');
+    el.setAttribute('aria-label', 'Soccer ball — drag to move, click to remove');
+    el.innerHTML = BALL_SVG;
+
+    let _down = false, _moved = false;
+
+    el.addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      e.preventDefault();
+      el.setPointerCapture(e.pointerId);
+      _down = true; _moved = false;
+      el.classList.add('ball-dragging');
+    });
+
+    el.addEventListener('pointermove', e => {
+      if (!_down) return;
+      _moved = true;
+      const rect = pitch.getBoundingClientRect();
+      b.x = +Math.max(2, Math.min(98, (e.clientX - rect.left) / rect.width  * 100)).toFixed(1);
+      b.y = +Math.max(2, Math.min(98, (e.clientY - rect.top)  / rect.height * 100)).toFixed(1);
+      el.style.left = b.x + '%';
+      el.style.top  = b.y + '%';
+    });
+
+    el.addEventListener('pointerup', () => {
+      if (!_down) return;
+      _down = false;
+      el.classList.remove('ball-dragging');
+      if (_moved) { saveState(); }
+      else        { removeBall(b.id); }
+    });
+
+    el.addEventListener('click', e => e.stopPropagation());
+
+    pitch.appendChild(el);
+  });
+}
+
+function resetLineup() {
+  if (!confirm('Clear the current lineup?')) return;
+  lineup = {}; customPlacements = []; selected = null; drawings = []; ballPlacements = [];
+  saveState();
+  renderPitch(); renderSquad(); renderDrawings(); showBanner(false);
+  showToast('Lineup cleared');
+}
+
+async function saveImage() {
+  if (typeof html2canvas === 'undefined') { showToast('Save unavailable'); return; }
+  const wrap = document.getElementById('pitchWrap');
+  try {
+    showToast('Generating image…');
+    const canvas = await html2canvas(wrap, { backgroundColor: '#0C0B09', scale: 2, useCORS: true, logging: false });
+    const name = (document.getElementById('lineupName').value.trim() || 'ATL-UTD-Lineup').replace(/\s+/g,'-').toUpperCase();
+    const a = document.createElement('a');
+    a.download = name + '.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+    showToast('Image saved!');
+  } catch { showToast('Could not save — try again'); }
+}
+
+// ═══════════════════════════════════════════════════════
+// KEYBOARD
+// ═══════════════════════════════════════════════════════
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    selected = null;
+    renderSquad(); updateSlotHighlights(); showBanner(false);
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+
+// Inject pitch field SVG
+document.getElementById('pitch').insertAdjacentHTML('afterbegin', buildPitchSVG());
+
+
+// Wire buttons
+document.getElementById('resetBtn').addEventListener('click', resetLineup);
+document.getElementById('saveBtn').addEventListener('click', saveImage);
+document.getElementById('bannerDismiss').addEventListener('click', () => {
+  selected = null; renderSquad(); updateSlotHighlights(); showBanner(false);
+});
+
+// Update instruction text for desktop (pointer: fine = mouse)
+if (window.matchMedia('(pointer: fine)').matches) {
+  const el = document.getElementById('pitchInstruction');
+  if (el) el.textContent = 'Click a player · click a position · or drag & drop · click a token to remove';
+}
+
+// Drawing toolbar
+document.getElementById('drawToggle').addEventListener('click', toggleDrawMode);
+document.querySelectorAll('.dtool[data-tool]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!drawMode) { drawMode = btn.dataset.tool; updateDrawUI(); return; }
+    drawMode = btn.dataset.tool;
+    updateDrawUI();
+  });
+});
+document.querySelectorAll('.dcolor').forEach(btn => {
+  btn.addEventListener('click', () => {
+    drawColor = btn.dataset.color;
+    document.querySelectorAll('.dcolor').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+    btn.classList.add('active'); btn.setAttribute('aria-pressed','true');
+  });
+});
+document.querySelectorAll('.dwidth').forEach(btn => {
+  btn.addEventListener('click', () => {
+    drawWidth = parseFloat(btn.dataset.width);
+    document.querySelectorAll('.dwidth').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+    btn.classList.add('active'); btn.setAttribute('aria-pressed','true');
+  });
+});
+document.getElementById('undoDrawing').addEventListener('click', undoLastDrawing);
+document.getElementById('clearDrawings').addEventListener('click', clearAllDrawings);
+document.getElementById('addBallBtn').addEventListener('click', addBall);
+
+initDrawEvents();
+
+// Load saved state then render
+loadState();
+renderPills();
+renderPitch();   // also calls renderBalls()
+renderSquad();
+renderDrawings();
+</script>
+</body>
+</html>
